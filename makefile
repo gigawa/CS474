@@ -17,3 +17,7 @@ Threshold:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o \
 	g++ -o Threshold $(CFLAGS) image.o ReadImage.o ReadImageHeader.o \
 					WriteImage.o Threshold.cpp
 
+Sample:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o \
+		Sample.cpp
+	g++ -o Sample $(CFLAGS) image.o ReadImage.o ReadImageHeader.o \
+					WriteImage.o Sample.cpp
