@@ -21,3 +21,8 @@ Sample:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o \
 		Sample.cpp
 	g++ -o Sample $(CFLAGS) image.o ReadImage.o ReadImageHeader.o \
 					WriteImage.o Sample.cpp
+
+Quantization:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o \
+		Quantization.cpp
+	g++ -o Quantization $(CFLAGS) image.o ReadImage.o ReadImageHeader.o \
+					WriteImage.o Quantization.cpp
