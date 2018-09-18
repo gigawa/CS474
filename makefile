@@ -26,3 +26,8 @@ Quantization:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o \
 		Quantization.cpp
 	g++ -o Quantization $(CFLAGS) image.o ReadImage.o ReadImageHeader.o \
 					WriteImage.o Quantization.cpp
+					
+Equalization:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o \
+		Equalization.cpp
+	g++ -o Equalization $(CFLAGS) image.o ReadImage.o ReadImageHeader.o \
+					WriteImage.o Equalization.cpp
