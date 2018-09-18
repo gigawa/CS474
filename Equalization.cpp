@@ -4,6 +4,7 @@
 
 #include <math.h>
 #include <iomanip>
+#include <fstream>
 #include "image.h"
 
 using namespace std;
@@ -130,6 +131,45 @@ int main(int argc, char *argv[])
   writeImage(argv[2], newImage);
   cout << "Output: " << argv[2] << endl;
   
+  
+  // Outputs the pixel counts of each gray level value, will be used for our histogram
+  ofstream fileOne("histogramValues.txt");
+  
+  for(int i = 0; i < Q+1; i++){
+    fileOne << pixelCount[i] << endl;
+  }
+  
+  fileOne.close();
+  
+  
+  // Outputs the pdf values for all our gray levels
+  ofstream fileTwo("probabilityDensity.txt");
+  
+  for(int i = 0; i < Q+1; i++){
+    fileTwo << probabilityDensity[i] << endl;
+  }
+  
+  fileTwo.close();
+  
+  
+  // Outputs the cumulative probability values for all our gray levels
+  ofstream fileThree("cumulativeProbability.txt");
+  
+  for(int i = 0; i < Q+1; i++){
+    fileThree << cumulativeDistribution[i] << endl;
+  }
+  
+  fileThree.close();
+  
+  
+  // Outputs the new equalized values
+  ofstream fileFour("equalizedValues.txt");
+  
+  for(int i = 0; i < Q+1; i++){
+    fileFour << newFlooredIntValues[i] << endl;
+  }
+  
+  fileFour.close();
   
   return (1);
 }
