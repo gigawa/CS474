@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
   bool type;
   int val;
   int sample = 2;
+  int pixelCount = 0;
 
   // read image header
   readImageHeader(argv[1], N, M, Q, type);
@@ -34,7 +35,9 @@ int main(int argc, char *argv[])
   //Sample image for 128, 64, 32
   for(int m = 0; m < 3; m++) {
     // Sample each image
+    pixelCount = 0;
     for(i=0; i<N; i += sample) {
+      pixelCount++;
       for(j=0; j<M; j += sample) {
         image.getPixelVal(i, j, val);
         for(int k = 0; k < sample; k++) {
@@ -50,7 +53,7 @@ int main(int argc, char *argv[])
     // write each sampled image
     writeImage(argv[2+m], image);
     cout << "Output: " << argv[2+m] << endl;
-    sample++;
+    sample *= 2;
   }
 
   return (1);
