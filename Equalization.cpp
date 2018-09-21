@@ -36,6 +36,11 @@ int main(int argc, char *argv[])
   int newFlooredIntValues[Q+1] = {0};
   int equalizer = Q+1; //Integer used to scale cumulativeDistribution[] to re-map new image with (256 in our case)
   float totalPixels = N*M;
+  int intTotalPixels = N*M;
+  
+  //Arrays for matrix values
+  int originalMatrix[intTotalPixels] = {0};
+  int equalizedMatrix[intTotalPixels] = {0};
 
   
   cout << endl << "N is: " << N << endl << "M is: " << M << endl;
@@ -48,7 +53,18 @@ int main(int argc, char *argv[])
   // read image
   readImage(argv[1], image);
   
+  ofstream fileOriginal("originalPixelsHistogram.txt");
   
+  //Print outs individual pixel values for all N*M pixels in original image
+  int reader = 0;
+  for(int i = 0; i < N; i++){
+    for(int j = 0; j < M; j++){
+        image.getPixelVal(i, j, reader);
+        fileOriginal << reader << endl;
+    }
+  }
+  
+  fileOriginal.close();
   
   // Parse through image.pixelvalue[0..255][0..255] and increment each index in pixelCount
   for(int i = 0; i < N; i++){
@@ -129,9 +145,24 @@ int main(int argc, char *argv[])
   }
   
   writeImage(argv[2], newImage);
+  
+  ofstream fileEqualized("equalizedPixelsHistogram.txt");
+  
+  //Print outs individual pixel values for all N*M pixels in equalized image
+  reader = 0;
+  for(int i = 0; i < N; i++){
+    for(int j = 0; j < M; j++){
+        newImage.getPixelVal(i, j, reader);
+        fileEqualized << reader << endl;
+    }
+  }
+  
+  fileEqualized.close();
+  
+  
   cout << "Output: " << argv[2] << endl;
   
-  
+  /*
   // Outputs the pixel counts of each gray level value, will be used for our histogram
   ofstream fileOne("histogramValues.txt");
   
@@ -169,7 +200,7 @@ int main(int argc, char *argv[])
     fileFour << newFlooredIntValues[i] << endl;
   }
   
-  fileFour.close();
+  fileFour.close();*/
   
   return (1);
 }
