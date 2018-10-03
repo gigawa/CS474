@@ -12,7 +12,10 @@ WriteImage.o:	image.h WriteImage.cpp
 image.o:	image.h image.cpp
 	g++ -c $(CFLAGS) image.cpp
 
-Correlation:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o \
+Mask.o:		image.h Mask.cpp
+	g++ -c $(CFLAGS) Mask.cpp
+
+Correlation:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o Mask.o \
 		Correlation.cpp
-	g++ -o Correlation $(CFLAGS) image.o ReadImage.o ReadImageHeader.o \
+	g++ -o Correlation $(CFLAGS) image.o ReadImage.o ReadImageHeader.o Mask.o \
 					WriteImage.o Correlation.cpp
