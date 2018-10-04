@@ -11,28 +11,66 @@ using namespace std;
 
 void ApplyMask(ImageType & image, int tempN, int tempM, int Q) {
   int padding = 3;
+  //int padding = 1;
   int N = tempN + (padding * 2);
   int M = tempM + (padding * 2);
-  int maskSize = 3;
-  double mask [7][7] = {1,1,2,2,2,1,1,1,2,2,4,2,2,1,2,2,4,8,4,2,2,2,4,8,16,8,4,2,2,2,4,8,4,2,2,1,2,2,4,2,2,1,1,1,2,2,2,1,1};
-  double maskSum = 0;
+  int maskSize = (padding * 2) + 1;
+  int mask [7][7] = {1,1,2,2,2,1,1,1,2,2,4,2,2,1,2,2,4,8,4,2,2,2,4,8,16,8,4,2,2,2,4,8,4,2,2,1,2,2,4,2,2,1,1,1,2,2,2,1,1};
+  //int mask [3][3] = {0,1,0,1,-4,1,0,1,0};
   int val;
+
+  //max and min values of the pixel values after applying mask. Used to convert to correct range 0 - 255
+  int max = 0;
+  int min = 1000;
 
   ImageType paddedArray(ImagePadding(image, tempN, tempM, Q, padding));
 
-  for(int i = padding; i < tempN; i++) {
-    for(int j = padding; j < tempM; j++) {
+  //iterate through image to apply mask
+  for(int i = 0; i < tempN; i++) {
+    for(int j = 0; j < tempM; j++) {
       paddedArray.getPixelVal(i, j, val);
 
       int v = 0;
+
+      //iterate through area on image that mask covers
       for(int k = 0; k < maskSize; k++) {
         for(int l = 0; l < maskSize; l++) {
           paddedArray.getPixelVal(i + k, j + l, val);
-          v += (mask[k][l] * val)/16;
+          v += (mask[k][l] * val);
         }
       }
-      cout << val << " " << v << endl;
-      image.setPixelVal(i - padding, j - padding, v);
+
+      //set min and max values
+      if(v < min) {
+        min = v;
+      }else if(v > max) {
+        max = v;
+      }
+
+      image.setPixelVal(i, j, v);
+    }
+  }
+
+  cout << "Max: " << max << endl << "Min: " << min << endl;
+
+  if(min < 0) {
+    max -= min;
+  }
+
+  //divide each value by d to return values to correct range
+  float d = ((float)255/max);
+
+  cout << "D: " << d << endl;
+
+  //iterate through image returning values to correct range
+  for(int i = 0; i < tempN; i++) {
+    for(int j = 0; j < tempM; j++) {
+      image.getPixelVal(i, j, val);
+      if(min < 0) {
+        val -= min;
+      }
+      val *= d;
+      image.setPixelVal(i, j, val);
     }
   }
 }
@@ -50,25 +88,4 @@ ImageType & ImagePadding(ImageType & image, int N, int M, int Q, int P) {
   }
 
   return (*paddedImage);
-}
-
-int ** ImagePadding(ImageType & image, int N, int M, int P) {
-  int TotalPadding = P * 2;
-  int val;
-
-  int ** paddedArray = new int* [N + TotalPadding];
-  for(int i=0; i < N + TotalPadding; i++) {
-    paddedArray[i] = new int[M];
-    for(int j=0; j < M + TotalPadding; j++)
-      paddedArray[i][j] = 0;
-  }
-
-  for(int i=0; i<N; i++) {
-    for(int j=0; j<M; j++) {
-      image.getPixelVal(i, j, val);
-      paddedArray[i+P][j+P] = val;
-    }
-  }
-
-  return paddedArray;
 }
