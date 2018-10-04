@@ -9,14 +9,10 @@ ImageType & ImagePadding(ImageType & image, int N, int M, int Q, int P);
 
 using namespace std;
 
-void ApplyMask(ImageType & image, int tempN, int tempM, int Q) {
-  int padding = 3;
-  //int padding = 1;
+void ApplyMask(ImageType & image, int ** mask, int padding, int tempN, int tempM, int Q) {
   int N = tempN + (padding * 2);
   int M = tempM + (padding * 2);
   int maskSize = (padding * 2) + 1;
-  int mask [7][7] = {1,1,2,2,2,1,1,1,2,2,4,2,2,1,2,2,4,8,4,2,2,2,4,8,16,8,4,2,2,2,4,8,4,2,2,1,2,2,4,2,2,1,1,1,2,2,2,1,1};
-  //int mask [3][3] = {0,1,0,1,-4,1,0,1,0};
   int val;
 
   //max and min values of the pixel values after applying mask. Used to convert to correct range 0 - 255
