@@ -12,60 +12,112 @@ int writeImage(char[], ImageType&);
 ImageType & ImagePadding(ImageType & image, int N, int M, int Q, int P);
 void ApplyMask(ImageType & image, int ** mask, int padding, int tempN, int tempM, int Q);
 
-//3 output image files entered in command line
-//ex: ./Sample aerial.PGM aerial1.PGM aerial2.PGM aerial3.PGM
+//Correlation execution command line example:
+// ./Correlation Pattern.pgm Image.pgm CorrOut.PGM
+// where "Pattern" is the image to look for in "Image" and results saved to "CorrOut"
+// so: argv[1] is the pattern image that defines the mask
+//     argv[2] is the image to look for the pattern
+//     argv[3] is the output image where correlation results are stored and normalized
+//            to be viewed as a PGM greyscale image
 
 int main(int argc, char *argv[])
 {
   int i, j;
-  int M, N, Q;
+  int N, M, Q; // refers to the pattern, argv[1], and its dimensions/grey levels (row, col, grey)
+  int J, K, L; // refers to the input image, argv[2] (row, col , grey)
+               // also the same dimensions to use for output image
   bool type;
   int val;
 
   // read image header
   readImageHeader(argv[1], N, M, Q, type);
+  readImageHeader(argv[2], J, K, L, type);
 
   // allocate memory for the image array
-
-  ImageType image(N, M, Q);
+  ImageType patternImage(N, M, Q);
+  ImageType inputImage(J, K, L);
+  //ImageType outputImage(J, K, L); NOTE maybe unneeded
 
   // read image
-  readImage(argv[1], image);
-
-  int n;
-	//input number of rows and columns
-	cout << "Enter Number of rows: ";
-	cin >> n;
-
+  readImage(argv[1], patternImage);
+  readImage(argv[2], inputImage);
+  
+  
+  //Debug cout's
+  cout << endl;
+  cout << "Format: 'Image' 'Rows' 'Columns' 'Grey Levels' " << endl;
+  cout << "__________________" << endl;
+  cout << "Pattern N M Q: " << N << "  " << M << "  " << Q << endl;
+  cout << "Input J K L: " << J << "  " << K << "  " << L << endl;
+  
+  
+  //Find mask dimensions to make it into a square for image traversal
+  int maskDimensions = 0;
+  
+  if(N > M && N%2 != 0){
+    //Then N is larger, and is odd. Use this to create the mask matrix with both 
+    //rows and columns set to N, with all extra cells filled with 0s
+    maskDimensions = N;
+  }
+  else if(M > N && M%2 != 0){
+    //Then M is larger, and is odd. Use this as the dimensions for the mask.
+    maskDimensions = M;
+  }
+  else{
+    cout << "ERROR: Neither the rows or columns are odd, cannot make a square matrix." << endl;
+    return(0);
+  }
+  
+  
+    //Mask Creation
 	//pointer to 2D array
-	int ** mask = new int*[n];
+	int ** mask = new int*[maskDimensions];
 
 	//pointer initialization
-	for(int i=0;i<n;i++)
+	for(int i = 0 ; i < maskDimensions ; i++)
 	{
-		mask[i] = new int[n];
+		mask[i] = new int[maskDimensions];
 	}
 
-  cout << "Enter Mask: ";
-	//input array elements
-	for(int i = 0; i < n; i++)
+    //Set all cells to 0 
+    for(int i = 0; i < maskDimensions; i++)
 	{
-		for(int j = 0; j < n; j++)
+		for(int j = 0; j < maskDimensions; j++)
 		{
-			cin >> mask[i][j];
+			mask[i][j] = 0;
 		}
 	}
 
-  //int padding = 3;
-  int padding = (n - 1)/2;
-  //int mask [7][7] = {1,1,2,2,2,1,1,1,2,2,4,2,2,1,2,2,4,8,4,2,2,2,4,8,16,8,4,2,2,2,4,8,4,2,2,1,2,2,4,2,2,1,1,1,2,2,2,1,1};
-  //int mask [3][3] = {0,1,0,1,-4,1,0,1,0};
 
-  ApplyMask(image, mask, padding, N, M, Q);
+    cout << endl << "Inputting mask weights from pattern image (argv[1])..." << endl;
+	//Fill mask weights, make sure to only fill in however many rows and columns are in
+	//pattern image, as this matrix is larger than that image. To do this, utilize
+	//previously stored row and col values for argv[1] in N and M
+	for(int i = 0; i < N; i++)
+	{
+		for(int j = 0; j < M; j++)
+		{
+		    patternImage.getPixelVal(i, j, val);
+			mask[i][j] = val;
+			//cout << mask[i][j] << " ";
+		}
+		//cout << endl;
+	}
+	cout << endl << "...mask weights stored. " << endl;
 
-  // write each sampled image
-  writeImage(argv[2], image);
-  cout << "Output: " << argv[2] << endl;
+
+
+
+  int padding = (J - 1)/2; //Using J as that corresponds to rows in the input image argv[2]
+
+    cout << "test1" << endl;
+    ApplyMask(inputImage, mask, padding, J, K, L);
+    cout << "test2" << endl;
+
+
+    //Write image into argv[3] using inputImage which is now mask-applied
+    writeImage(argv[3], inputImage);
+    cout << "Output: " << argv[3] << endl;
 
   return (1);
 }
