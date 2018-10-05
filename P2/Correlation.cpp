@@ -36,7 +36,22 @@ int main(int argc, char *argv[])
   // allocate memory for the image array
   ImageType patternImage(N, M, Q);
   ImageType inputImage(J, K, L);
-  //ImageType outputImage(J, K, L); NOTE maybe unneeded
+  
+  //Creates new image with square dimensions to store input image
+  int outputDimensions = 0;
+  
+    if(J > K){
+        outputDimensions = J;
+        ImageType outputImage(J, J, L);
+    }
+    else if(K > J){
+        outputDimensions = K;
+        ImageType outputImage(K, K, L);
+    }
+    
+  ImageType outputImage(outputDimensions, outputDimensions, L);
+    
+    
 
   // read image
   readImage(argv[1], patternImage);
@@ -104,15 +119,36 @@ int main(int argc, char *argv[])
 		//cout << endl;
 	}
 	cout << endl << "...mask weights stored. " << endl;
+	
+
+	//Now copy in the inputImage into the cells of outputImage
+	//Make sure to only work around inputImage's dimensions or else you'll be OOB (use J & K)
+	val = 0;
+	for(int i = 0; i < J; i++){
+	    for(int j = 0; j < K; j++){
+	        inputImage.getPixelVal(i, j, val);
+	        outputImage.setPixelVal(i, j, val);
+	        //cout << val << " ";
+	    }
+	   //cout << endl;
+	}
+	
+	for(int i = 0; i < outputDimensions; i++){
+	    for(int j = 0; j < outputDimensions; j++){
+	        outputImage.getPixelVal(i, j, val);
+	        //cout << val << " ";
+	    }
+	   //cout << endl;
+	}
 
 
 
 
-  int padding = (J - 1)/2; //Using J as that corresponds to rows in the input image argv[2]
+    int padding = (maskDimensions - 1)/2; //Using J as that corresponds to rows in the input image argv[2]
 
-    cout << "test1" << endl;
+    cout << "Applying mask" << endl;
     ApplyMask(inputImage, mask, padding, J, K, L);
-    cout << "test2" << endl;
+    cout << "...mask applied" << endl;
 
 
     //Write image into argv[3] using inputImage which is now mask-applied
