@@ -6,6 +6,7 @@
 
 ImageType & ImagePadding(ImageType & image, int N, int M, int Q, int P);
 void NormalizeImage(ImageType & image, int N, int M, int min, int max);
+void NormalizeImage(ImageType & image, int N, int M);
 
 using namespace std;
 
@@ -47,18 +48,57 @@ void ApplyMask(ImageType & image, int ** mask, int padding, int tempN, int tempM
     }
   }
 
-  //cout << "Max: " << max << endl << "Min: " << min << endl;
+  if(normalize) {
+    NormalizeImage(image, tempN, tempM, min, max);
+  }
+}
+
+void NormalizeImage(ImageType & image, int N, int M, int min, int max) {
+  int val;
+  if(min < 0) {
+    max -= min;
+  }
+
+  //divide each value by d to return values to correct range
+  float d = ((float)255/max);
+
+  //cout << "D: " << d << endl;
+
+  //iterate through image returning values to correct range
+  for(int i = 0; i < N; i++) {
+    for(int j = 0; j < M; j++) {
+      image.getPixelVal(i, j, val);
+      if(min < 0) {
+        val -= min;
+      }
+      val *= d;
+      image.setPixelVal(i, j, val);
+    }
+  }
+}
+
+void NormalizeImage(ImageType & image, int N, int M) {
+  int max = -1000;
+  int min = 1000;
+
+  for(int i = 0; i < N; i++) {
+    for(int j = 0; j < M; j++) {
+      int v;
+      image.getPixelVal(i, j, v);
+      if(v > max) {
+        max = v;
+      }else if(v < min) {
+        min = v;
+      }
+    }
+  }
 
   if(min < 0) {
     max -= min;
   }
 
-  NormalizeImage(image, tempN, tempM, min, max);
-}
-
-void NormalizeImage(ImageType & image, int N, int M, int min, int max) {
   int val;
-  
+
   //divide each value by d to return values to correct range
   float d = ((float)255/max);
 
