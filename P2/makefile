@@ -19,3 +19,8 @@ Correlation:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o Mask.o \
 		Correlation.cpp
 	g++ -o Correlation $(CFLAGS) image.o ReadImage.o ReadImageHeader.o Mask.o \
 					WriteImage.o Correlation.cpp
+
+Smoothing:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o Mask.o \
+		Smoothing.cpp
+	g++ -o Smoothing $(CFLAGS) image.o ReadImage.o ReadImageHeader.o Mask.o \
+					WriteImage.o Smoothing.cpp

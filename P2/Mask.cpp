@@ -47,7 +47,7 @@ void ApplyMask(ImageType & image, int ** mask, int padding, int tempN, int tempM
     }
   }
 
-  cout << "Max: " << max << endl << "Min: " << min << endl;
+  //cout << "Max: " << max << endl << "Min: " << min << endl;
 
   if(min < 0) {
     max -= min;
@@ -56,7 +56,7 @@ void ApplyMask(ImageType & image, int ** mask, int padding, int tempN, int tempM
   //divide each value by d to return values to correct range
   float d = ((float)255/max);
 
-  cout << "D: " << d << endl;
+  //cout << "D: " << d << endl;
 
   //iterate through image returning values to correct range
   for(int i = 0; i < tempN; i++) {
