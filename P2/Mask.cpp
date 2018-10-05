@@ -4,12 +4,12 @@
 
 #include "image.h"
 
-int ** ImagePadding(ImageType & image, int N, int M, int P);
 ImageType & ImagePadding(ImageType & image, int N, int M, int Q, int P);
+void NormalizeImage(ImageType & image, int N, int M, int min, int max);
 
 using namespace std;
 
-void ApplyMask(ImageType & image, int ** mask, int padding, int tempN, int tempM, int Q) {
+void ApplyMask(ImageType & image, int ** mask, int padding, int tempN, int tempM, int Q, bool normalize) {
   int N = tempN + (padding * 2);
   int M = tempM + (padding * 2);
   int maskSize = (padding * 2) + 1;
@@ -53,14 +53,20 @@ void ApplyMask(ImageType & image, int ** mask, int padding, int tempN, int tempM
     max -= min;
   }
 
+  NormalizeImage(image, tempN, tempM, min, max);
+}
+
+void NormalizeImage(ImageType & image, int N, int M, int min, int max) {
+  int val;
+  
   //divide each value by d to return values to correct range
   float d = ((float)255/max);
 
   //cout << "D: " << d << endl;
 
   //iterate through image returning values to correct range
-  for(int i = 0; i < tempN; i++) {
-    for(int j = 0; j < tempM; j++) {
+  for(int i = 0; i < N; i++) {
+    for(int j = 0; j < M; j++) {
       image.getPixelVal(i, j, val);
       if(min < 0) {
         val -= min;

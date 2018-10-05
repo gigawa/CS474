@@ -10,7 +10,7 @@ int readImageHeader(char[], int&, int&, int&, bool&);
 int readImage(char[], ImageType&);
 int writeImage(char[], ImageType&);
 ImageType & ImagePadding(ImageType & image, int N, int M, int Q, int P);
-void ApplyMask(ImageType & image, int ** mask, int padding, int tempN, int tempM, int Q);
+void ApplyMask(ImageType & image, int ** mask, int padding, int tempN, int tempM, int Q, bool normalize);
 
 //Correlation execution command line example:
 // ./Correlation Pattern.pgm Image.pgm CorrOut.PGM
@@ -36,10 +36,10 @@ int main(int argc, char *argv[])
   // allocate memory for the image array
   ImageType patternImage(N, M, Q);
   ImageType inputImage(J, K, L);
-  
+
   //Creates new image with square dimensions to store input image
   int outputDimensions = 0;
-  
+
     if(J > K){
         outputDimensions = J;
         ImageType outputImage(J, J, L);
@@ -48,29 +48,29 @@ int main(int argc, char *argv[])
         outputDimensions = K;
         ImageType outputImage(K, K, L);
     }
-    
+
   ImageType outputImage(outputDimensions, outputDimensions, L);
-    
-    
+
+
 
   // read image
   readImage(argv[1], patternImage);
   readImage(argv[2], inputImage);
-  
-  
+
+
   //Debug cout's
   cout << endl;
   cout << "Format: 'Image' 'Rows' 'Columns' 'Grey Levels' " << endl;
   cout << "__________________" << endl;
   cout << "Pattern N M Q: " << N << "  " << M << "  " << Q << endl;
   cout << "Input J K L: " << J << "  " << K << "  " << L << endl;
-  
-  
+
+
   //Find mask dimensions to make it into a square for image traversal
   int maskDimensions = 0;
-  
+
   if(N > M && N%2 != 0){
-    //Then N is larger, and is odd. Use this to create the mask matrix with both 
+    //Then N is larger, and is odd. Use this to create the mask matrix with both
     //rows and columns set to N, with all extra cells filled with 0s
     maskDimensions = N;
   }
@@ -82,8 +82,8 @@ int main(int argc, char *argv[])
     cout << "ERROR: Neither the rows or columns are odd, cannot make a square matrix." << endl;
     return(0);
   }
-  
-  
+
+
     //Mask Creation
 	//pointer to 2D array
 	int ** mask = new int*[maskDimensions];
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 		mask[i] = new int[maskDimensions];
 	}
 
-    //Set all cells to 0 
+    //Set all cells to 0
     for(int i = 0; i < maskDimensions; i++)
 	{
 		for(int j = 0; j < maskDimensions; j++)
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 		//cout << endl;
 	}
 	cout << endl << "...mask weights stored. " << endl;
-	
+
 
 	//Now copy in the inputImage into the cells of outputImage
 	//Make sure to only work around inputImage's dimensions or else you'll be OOB (use J & K)
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
 	    }
 	   //cout << endl;
 	}
-	
+
 	for(int i = 0; i < outputDimensions; i++){
 	    for(int j = 0; j < outputDimensions; j++){
 	        outputImage.getPixelVal(i, j, val);
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
     int padding = (maskDimensions - 1)/2; //Using J as that corresponds to rows in the input image argv[2]
 
     cout << "Applying mask" << endl;
-    ApplyMask(inputImage, mask, padding, J, K, L);
+    ApplyMask(inputImage, mask, padding, J, K, L, true);
     cout << "...mask applied" << endl;
 
 

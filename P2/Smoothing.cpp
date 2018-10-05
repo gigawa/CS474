@@ -10,7 +10,7 @@ int readImageHeader(char[], int&, int&, int&, bool&);
 int readImage(char[], ImageType&);
 int writeImage(char[], ImageType&);
 ImageType & ImagePadding(ImageType & image, int N, int M, int Q, int P);
-void ApplyMask(ImageType & image, int ** mask, int padding, int tempN, int tempM, int Q);
+void ApplyMask(ImageType & image, int ** mask, int padding, int tempN, int tempM, int Q, bool normalize);
 void Gaussian(ImageType & image, bool fifteen, int N, int M, int Q, char output []);
 void Averaging(ImageType & oldImage, int maskSize, int N, int M, int Q, char output []);
 
@@ -61,7 +61,7 @@ void Averaging(ImageType & oldImage, int maskSize, int N, int M, int Q, char out
     }
   }
 
-  ApplyMask(image, mask, padding, N, M, Q);
+  ApplyMask(image, mask, padding, N, M, Q, true);
 
   // write each sampled image
   writeImage(output, image);
@@ -130,7 +130,7 @@ void Gaussian(ImageType & oldImage, bool fifteen, int N, int M, int Q, char outp
 
   int padding = (currSize - 1)/2;
 
-  ApplyMask(image, mask, padding, N, M, Q);
+  ApplyMask(image, mask, padding, N, M, Q, true);
 
   // write each sampled image
   writeImage(output, image);
