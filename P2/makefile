@@ -25,6 +25,10 @@ SaltPepper:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o Mask.o \
 	g++ -o SaltPepper $(CFLAGS) image.o ReadImage.o ReadImageHeader.o Mask.o \
 					WriteImage.o SaltPepper.cpp
 
+MedianFiltering:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o \
+		MedianFiltering.cpp
+	g++ -o MedianFiltering $(CFLAGS) image.o ReadImage.o ReadImageHeader.o \
+					WriteImage.o MedianFiltering.cpp
 
 Smoothing:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o Mask.o \
 		Smoothing.cpp
