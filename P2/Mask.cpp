@@ -44,7 +44,7 @@ void ApplyMask(ImageType & image, int ** mask, int padding, int tempN, int tempM
         max = v;
       }
 
-      image.setPixelVal(i, j, v);
+      image.setPixelVal(i + padding, j + padding, v);
     }
   }
 
