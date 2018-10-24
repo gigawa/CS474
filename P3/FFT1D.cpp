@@ -2,10 +2,12 @@
 #include <fstream>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 using namespace std;
 
 void fft(float data[], unsigned long nn, int isign);
+void PrintFunction(float function[], int nn, string output);
 
 int main(int argc, char *argv[])
 {
@@ -16,39 +18,12 @@ int main(int argc, char *argv[])
   //forward fft
   fft(function, N, -1);
 
-  //print total and multiply by normalization factor
-  cout << "Total: ";
+  //Multiply by normalization factor
   for(int i = 1; i < arrayLength; i++) {
     function[i] /= N;
-    cout << function[i] << ", ";
   }
 
-  cout << endl;
-
-  //print real
-  cout << "Real: ";
-  for(int i = 1; i < arrayLength; i += 2) {
-    cout << function[i] << ", ";
-  }
-
-  cout << endl;
-
-  //print imaginary
-  cout << "Imaginary: ";
-  for(int i = 2; i < arrayLength; i += 2) {
-    cout << function[i] << ", ";
-  }
-
-  cout << endl;
-
-  //print magnitude
-  cout << "Magnitude: ";
-  for(int i = 1; i < arrayLength; i += 2) {
-    float magnitude = sqrt((function[i] * function[i]) + (function[i+1] * function[i+1]));
-    cout << magnitude << ", ";
-  }
-
-  cout << endl;
+  PrintFunction(function, N, "Function1.txt");
 
   //inverse fft
   cout << "Inverse: ";
@@ -59,4 +34,44 @@ int main(int argc, char *argv[])
   }
 
   cout << endl;
+}
+
+void PrintFunction(float function[], int nn, string output) {
+  ofstream file(output);
+  int arrayLength = nn * 2 + 1;
+
+  //print total
+  file << "Total: " << endl;
+  for(int i = 1; i < arrayLength; i++) {
+    file << function[i] << endl;
+  }
+
+  file << endl;
+
+  //print real
+  file << "Real: " << endl;
+  for(int i = 1; i < arrayLength; i += 2) {
+    file << function[i] << endl;
+  }
+
+  file << endl;
+
+  //print imaginary
+  file << "Imaginary: " << endl;
+  for(int i = 2; i < arrayLength; i += 2) {
+    file << function[i] << endl;
+  }
+
+  file << endl;
+
+  //print magnitude
+  file << "Magnitude: " << endl;
+  for(int i = 1; i < arrayLength; i += 2) {
+    float magnitude = sqrt((function[i] * function[i]) + (function[i+1] * function[i+1]));
+    file << magnitude << endl;
+  }
+
+  file << endl;
+
+  file.close();
 }
