@@ -143,9 +143,17 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
         oddSpots = 1;
         evenSpots = 2;
         
+        
             //Call FFT on currentArray
         fft(currentArray, N, isign);
         
+            //Normalize the array before storage
+        for(int h = 1; h < arraySize; h++) {
+            currentArray[h] /= N;
+        }
+        
+        
+            //Store the transformed values back into the same row/column it got pulled from
         for(int k = 0; k < M; k++){
             realPart[i][k] = currentArray[oddSpots];
             imaginaryPart[i][k] = currentArray[evenSpots];
@@ -175,9 +183,18 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
         oddSpots = 1;
         evenSpots = 2;
         
+        
+        
             //Call FFT on currentArray
         fft(currentArray, N, isign);
         
+            //Normalize the array before storage
+        for(int h = 1; h < arraySize; h++) {
+            currentArray[h] /= N;
+        }
+        
+        
+            //Store the transformed values back into the same row/column it got pulled from
         for(int k = 0; k < N; k++){
             realPart[k][i] = currentArray[oddSpots];
             imaginaryPart[k][i] = currentArray[evenSpots];
@@ -225,9 +242,18 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
         oddSpots = 1;
         evenSpots = 2;
         
+        
+        
             //Call FFT on currentArray
         fft(currentArray, N, isign);
         
+            //Normalize the array before storage
+        for(int h = 1; h < arraySize; h++) {
+            currentArray[h] /= N;
+        }
+        
+        
+            //Store the transformed values back into the same row/column it got pulled from
         for(int k = 0; k < M; k++){
             realPart[i][k] = currentArray[oddSpots];
             imaginaryPart[i][k] = currentArray[evenSpots];
@@ -257,9 +283,18 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
         oddSpots = 1;
         evenSpots = 2;
         
+        
+        
             //Call FFT on currentArray
         fft(currentArray, N, isign);
         
+            //Normalize the array before storage
+        for(int h = 1; h < arraySize; h++) {
+            currentArray[h] /= N;
+        }
+        
+        
+            //Store the transformed values back into the same row/column it got pulled from
         for(int k = 0; k < M; k++){
             realPart[k][i] = currentArray[oddSpots];
             imaginaryPart[k][i] = currentArray[evenSpots];
