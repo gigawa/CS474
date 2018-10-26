@@ -21,11 +21,13 @@ int main(int argc, char *argv[])
   float function2[257];
 
   ifstream fin("cosFunction.txt");
+  int x = 0;
   for(int i = 1; i < 257; i += 2) {
     fin >> function2[i];
 
     //shift to center
-    function2[i] *= pow(-1, i-1);
+    function2[i] *= pow(-1, x);
+    x++;
   }
   fin.close();
   for(int i = 0; i < 257; i += 2) {
@@ -38,11 +40,13 @@ int main(int argc, char *argv[])
   float function3[257];
 
   fin.open("Rect_128.dat");
+  x = 0;
   for(int i = 1; i < 257; i += 2) {
     fin >> function3[i];
 
     //shift to center
-    function3[i] *= pow(-1, i-1);
+    function3[i] *= pow(-1, x);
+    x++;
   }
   for(int i = 0; i < 257; i += 2) {
     function3[i] = 0;
@@ -83,14 +87,6 @@ void PrintFunction(float function[], int nn, string output) {
   ofstream file(output);
   int arrayLength = nn * 2 + 1;
 
-  /*//print total
-  file << "Total: " << endl;
-  for(int i = 1; i < arrayLength; i++) {
-    file << function[i] << endl;
-  }
-
-  file << endl;*/
-
   //print real
   file << "Real: " << endl;
   for(int i = 1; i < arrayLength; i += 2) {
@@ -112,6 +108,15 @@ void PrintFunction(float function[], int nn, string output) {
   for(int i = 1; i < arrayLength; i += 2) {
     float magnitude = sqrt((function[i] * function[i]) + (function[i+1] * function[i+1]));
     file << magnitude << endl;
+  }
+
+  file << endl << endl;
+
+  //print magnitude
+  file << "Phase: " << endl;
+  for(int i = 1; i < arrayLength; i += 2) {
+    float phase = atan(function[i+1]/function[i]);
+    file << phase << endl;
   }
 
   file << endl << endl;
