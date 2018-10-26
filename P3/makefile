@@ -19,3 +19,8 @@ FFT1D:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o \
 		FFT1D.cpp
 	g++ -o FFT1D $(CFLAGS) image.o ReadImage.o ReadImageHeader.o fft.o \
 					WriteImage.o FFT1D.cpp
+					
+FFT2D:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o \
+		FFT2D.cpp
+	g++ -o FFT2D $(CFLAGS) image.o ReadImage.o ReadImageHeader.o fft.o \
+					WriteImage.o FFT2D.cpp
