@@ -15,6 +15,11 @@ void fft(float data[], unsigned long nn, int isign);
 void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, int N, int M, int isign);
 
 /*
+    How to use:
+        "./FFT2D whiteSquare'x'.pgm 'output filename'.pgm"
+            - where 'x' is the white square's dimensions, 32, 64, or 128
+
+
     To do this:
         Function will look like this:
             Apply2DFFT(float function[], int N, string Output, int isign)
@@ -115,6 +120,7 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
         
     currentArray[0] = -1; //stores the faux -1 value so that fft from fft.c can receive our array
     
+    
     /* PRINTS ALL realPart VALUES BEFORE FFT
         cout << "   realPart values before FFT: " << endl;
     for(int i = 0; i < N; i++){
@@ -157,8 +163,8 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
     evenSpots = 2;   
     
         //Now do FFT on columns
-    for(int i = 0; i < N; i++){
-        for(int j = 0; j < M; j++){
+    for(int i = 0; i < M; i++){
+        for(int j = 0; j < N; j++){
             currentArray[oddSpots] = realPart[j][i];
             currentArray[evenSpots] = imaginaryPart[j][i];
             
@@ -172,7 +178,7 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
             //Call FFT on currentArray
         fft(currentArray, N, isign);
         
-        for(int k = 0; k < M; k++){
+        for(int k = 0; k < N; k++){
             realPart[k][i] = currentArray[oddSpots];
             imaginaryPart[k][i] = currentArray[evenSpots];
             
@@ -193,11 +199,15 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
     }*/
     
     
-        //NOW TEST WITH INVERSE THEN WRITE THE IMAGE
+    ///////////////////////////////////////////////////////////////
+    //                                                           //
+    //                                                           //
+    //                                                           //
+    //   ---   NOW TEST WITH INVERSE THEN WRITE THE IMAGE  ---   //
         
     isign = 1;
     
-        //To be safe, reset oddSpots and evenSpots in case above loop short-circuits somehow
+        //To be safe, reset oddSpots and evenSpots
     oddSpots = 1;
     evenSpots = 2;
     
@@ -262,11 +272,9 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
         evenSpots = 2;
     }    
     
-    //Now set pixel values using realPart on the image and output it
-    cout << "Post inverse FFT realPart values: " << endl;
+    cout << "Post inverse FFT realPart values, should be a bunch of 0's with 255's somewhere near the center " << endl;
     for(int i = 0; i < N; i++){
         for(int j = 0; j < M; j++){
-            //testImage.setPixelVal(i, j, realPart[i][j]);
             cout << realPart[i][j] << " ";
         }
     }
