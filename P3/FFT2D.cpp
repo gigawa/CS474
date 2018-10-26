@@ -12,7 +12,7 @@ int readImageHeader(char[], int&, int&, int&, bool&);
 int readImage(char[], ImageType&);
 int writeImage(char[], ImageType&);
 void fft(float data[], unsigned long nn, int isign);
-void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, int N, int M, int isign);
+void Apply2DFFT(int ** realPart, int ** imaginaryPart, int N, int M, int isign);
 
 /*
     How to use:
@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
     readImageHeader(argv[1], N, M, Q, type); //read in the input image, store rows to N, cols to M, gray lvl to Q
     
     cout << " Header values ... N: " << N << " M: " << M << " Q: " << Q << endl;
+
     
     // Now create a 2D matrix, store all the pixel values from the image into this matrix to use in Apply2DFFT
     ImageType inputImage(N, M, Q);
@@ -68,6 +69,14 @@ int main(int argc, char *argv[])
     
     readImage(argv[1], inputImage);   
     cout << " '" << argv[1] << "'" << " read into inputImage ... " << endl;
+    
+    
+        
+        // FOR TESTING USING 2x2 EXAMPLE FROM MIDTERM
+        //N = 2;
+        //M = 2;
+        
+        
     
         //Creating the 2D array that will hold the results in between FFT steps as well as the final results
     int ** realPart = new int*[N];
@@ -81,8 +90,9 @@ int main(int argc, char *argv[])
 	}
 
         //Stick the real values into realPart and make all values in imaginaryPart 0
+        
     for(int i = 0; i < N; i++){
-        for(int j = 0; j < N; j++){
+        for(int j = 0; j < M; j++){
             inputImage.getPixelVal(i, j, val);
             realPart[i][j] = val;
             imaginaryPart[i][j] = 0;
@@ -90,19 +100,39 @@ int main(int argc, char *argv[])
         }
     }
     
+    /*
+    realPart[0][0] = 0;
+    realPart[0][1] = 1;
+    realPart[1][0] = 1;
+    realPart[1][1] = 0;
+    
+    imaginaryPart[0][0] = 0;
+    imaginaryPart[0][1] = 0;
+    imaginaryPart[1][0] = 0;
+    imaginaryPart[1][1] = 0;
+    */
+    
     
         //Now call Apply2DFFT, do the calculations there, then output them in main afterwards
-    Apply2DFFT(inputImage, realPart, imaginaryPart, N, M, isign);
+    Apply2DFFT(realPart, imaginaryPart, N, M, isign);
     
         //Now see if we get back our white square;
     //writeImage(argv[2], inputImage);
+    
+    for(int i = 0; i < N; i++){
+        for(int j = 0; j < M; j++){
+            //cout << realPart[i][j] << " ";
+            outputImage.setPixelVal(i, j, realPart[i][j]);
+        }
+    }
 
+    writeImage(argv[2], outputImage);
 
     return 0;
 }
     
 
-void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, int N, int M, int isign){
+void Apply2DFFT(int ** realPart, int ** imaginaryPart, int N, int M, int isign){
 
     //Make a new array sized to N * 2 + 1
     //initialize with:
@@ -119,15 +149,6 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
         //Initialize currentArray with directions from above:
         
     currentArray[0] = -1; //stores the faux -1 value so that fft from fft.c can receive our array
-    
-    
-    /* PRINTS ALL realPart VALUES BEFORE FFT
-        cout << "   realPart values before FFT: " << endl;
-    for(int i = 0; i < N; i++){
-        for(int j = 0; j < N; j++){
-            cout << realPart[i][j] << " ";
-        }
-    }*/
     
     
         //Now build the array up from each row then call fft on it
@@ -147,11 +168,6 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
             //Call FFT on currentArray
         fft(currentArray, N, isign);
         
-            //Normalize the array before storage
-        for(int h = 1; h < arraySize; h++) {
-            currentArray[h] /= N;
-        }
-        
         
             //Store the transformed values back into the same row/column it got pulled from
         for(int k = 0; k < M; k++){
@@ -168,7 +184,7 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
     
         //To be safe, reset oddSpots and evenSpots in case above loop short-circuits somehow
     oddSpots = 1;
-    evenSpots = 2;   
+    evenSpots = 2;
     
         //Now do FFT on columns
     for(int i = 0; i < M; i++){
@@ -207,21 +223,22 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
         evenSpots = 2;
     }
     
-    /* PRINT ALL POST FFT realPart VALUES
-    cout << "   realPart values post FFT: " << endl;
+        //Some values go < 0, can't write image using negative values, so we set those to 0
     for(int i = 0; i < N; i++){
-        for(int j = 0; j < N; j++){
-            cout << realPart[i][j] << " ";
+        for(int j = 0; j < M; j++){
+            if(realPart[i][j] < 0){
+                realPart[i][j] = 0;
+            }
         }
-    }*/
+    }
     
-    
+    /*
     ///////////////////////////////////////////////////////////////
     //                                                           //
     //                                                           //
     //                                                           //
     //   ---   NOW TEST WITH INVERSE THEN WRITE THE IMAGE  ---   //
-        
+    
     isign = 1;
     
         //To be safe, reset oddSpots and evenSpots
@@ -246,11 +263,6 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
         
             //Call FFT on currentArray
         fft(currentArray, N, isign);
-        
-            //Normalize the array before storage
-        for(int h = 1; h < arraySize; h++) {
-            currentArray[h] /= N;
-        }
         
         
             //Store the transformed values back into the same row/column it got pulled from
@@ -306,14 +318,15 @@ void Apply2DFFT(ImageType & testImage, int ** realPart, int ** imaginaryPart, in
         oddSpots = 1;
         evenSpots = 2;
     }    
-    
-    cout << "Post inverse FFT realPart values, should be a bunch of 0's with 255's somewhere near the center " << endl;
+
     for(int i = 0; i < N; i++){
         for(int j = 0; j < M; j++){
-            cout << realPart[i][j] << " ";
+            if(realPart[i][j] < 0){
+                realPart[i][j] = 0;
+            }
         }
     }
-    
+    */
 }
 
     
