@@ -24,3 +24,8 @@ RemoveNoise:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o FF
 		RemoveNoise.cpp
 	g++ -o RemoveNoise $(CFLAGS) FFT2D.o image.o ReadImage.o ReadImageHeader.o fft.o \
 					WriteImage.o RemoveNoise.cpp
+
+Restoration:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o FFT2D.o\
+		Restoration.cpp
+	g++ -o Restoration $(CFLAGS) FFT2D.o image.o ReadImage.o ReadImageHeader.o fft.o \
+					WriteImage.o Restoration.cpp

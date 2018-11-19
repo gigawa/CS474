@@ -15,19 +15,12 @@ void Apply2DFFT(int ** realPart, int ** imaginaryPart, int N, int M, int isign);
 void WriteImage(int ** realPart, int N, int Q, char * file);
 void NormalizeImage(ImageType & image, int N, int min, int max);
 
-int main(int argc, char * argv[]) {
-  // argv[1] file name - will hold the input image
-  // argv[2] file name - will hold the output image
+#define PI 3.14
 
+int main(int argc, char * argv[]) {
   int M, N, Q; // N is rows, M is columns, Q is gray levels
   bool type;
   int val;
-  int isign = -1;
-  int filterSize = 40;
-  int butterworth = 4;
-
-  cout << "Enter band radius: ";
-  cin >> filterSize;
 
   readImageHeader(argv[1], N, M, Q, type); //read in the input image, store rows to N, cols to M, gray lvl to Q
 
@@ -48,12 +41,12 @@ int main(int argc, char * argv[]) {
 
       //Allocate memory for double pointers (2D Arrays)
   for(int i = 0 ; i < N ; i++)
-{
+  {
   realPart[i] = new int[N];
   imaginaryPart[i] = new int[N];
-}
+  }
 
-      //Stick the real values into realPart and make all values in imaginaryPart 0
+  //Stick the real values into realPart and make all values in imaginaryPart 0
 
   for(int i = 0; i < N; i++){
       for(int j = 0; j < M; j++){
@@ -70,52 +63,55 @@ int main(int argc, char * argv[]) {
     }
   }
 
+  float ** blurReal = new float*[N];
+  float ** blurImaginary = new float*[N];
+  int ** blurMag = new int*[N];
+
       //Now call Apply2DFFT, do the calculations there, then output them in main afterwards
-  Apply2DFFT(realPart, imaginaryPart, N, M, isign);
+  Apply2DFFT(realPart, imaginaryPart, N, M, -1);
 
-  float ** filterRealPart = new float*[N];
-  int ** filterImaginaryPart = new int*[N];
+  WriteImage(realPart, N, Q, "Before.PGM");
 
-      //Allocate memory for double pointers (2D Arrays)
-  for(int i = 0 ; i < N ; i++)
-{
-  filterRealPart[i] = new float[N];
-}
+  for(int i = 0; i < N; i++){
 
-for(int i = 0; i < N; i++){
-    for(int j = 0; j < M; j++){
-      int mag = sqrt(i*i + j*j);
-      filterRealPart[i][j] = 0;
+    blurReal[i] = new float[N];
+    blurImaginary[i] = new float[N];
+    blurMag[i] = new int[N];
+
+    for(int j = 0; j < N; j++){
+
+      float u = i - N/2;
+      float v = j - N/2;
+      float a = 0.1;
+      float inside = PI * ((a * u) + (a * v));
+
+      float fraction = 1 / inside;
+      float sinFunction = sin(inside);
+      float first = fraction * sinFunction;
+      float cosine = cos(inside);
+      float sine = sin(inside);
+      blurReal[i][j] = (realPart[i][j] * cosine * first) + (imaginaryPart[i][j] * sine * first);
+      blurImaginary[i][j] = (imaginaryPart[i][j] * cosine * first) - (realPart[i][j] * sine * first);
+      realPart[i][j] = int(blurReal[i][j]);
+      imaginaryPart[i][j] = int(blurImaginary[i][j]);
+
+      blurMag[i][j] = sqrt(pow(blurReal[i][j], 2) + pow(blurImaginary[i][j], 2));
+
+      if(blurReal[i][j] != 0 && blurImaginary[i][j] != 0) {
+        cout << "Points: " << u << ", " << v << endl;
+        cout << "fraction: " << fraction << endl;
+        cout << "sinFunction: " << sinFunction << endl;
+        cout << "first: " << first << endl;
+        cout << "cosine: " << cosine << endl;
+        cout << "sine: " << sine << endl;
+        cout << "real: " << blurReal[i][j] << endl;
+        cout << "imaginary: " << blurImaginary[i][j] << endl;
+      }
     }
-}
-
-  //Create low pass filter
-  for(int i = 0; i < N; i++){
-      for(int j = 0; j < M; j++){
-        //ideal
-        /*int mag = sqrt(pow(i - N/2, 2) + pow(j - N/2, 2));
-          if(mag < filterSize) {
-            cout  << i << ", " << j << endl;
-            filterRealPart[i][j] = 1;
-          }*/
-
-          //gaussian
-          /*filterRealPart[i][j] = exp(-1 * (pow(i-N/2, 2) + pow(j-N/2, 2)) / (2 * pow(2 * filterSize, 2)));
-          cout << "Filter: " << filterRealPart[i][j] << endl;
-          */
-
-          //Butterworth
-          filterRealPart[i][j] = 1 / (1 + pow(sqrt(pow(i - N/2, 2) + pow(j - N/2, 2)) / filterSize, 2 * butterworth));
-      }
   }
 
-  //Apply Filter
-  for(int i = 0; i < N; i++){
-      for(int j = 0; j < M; j++){
-          realPart[i][j] *= filterRealPart[i][j];
-          imaginaryPart[i][j] *= filterRealPart[i][j];
-      }
-  }
+  WriteImage(blurMag, N, Q, "BlurMag.PGM");
+  WriteImage(realPart, N, Q, "After.PGM");
 
   Apply2DFFT(realPart, imaginaryPart, N, M, 1);
 
@@ -126,7 +122,7 @@ for(int i = 0; i < N; i++){
     }
   }
 
-  WriteImage(realPart, N, Q, "Done.PGM");
+  WriteImage(realPart, N, Q, "Blurred.PGM");
 }
 
 void WriteImage(int ** realPart, int N, int Q, char * file) {
@@ -148,8 +144,11 @@ void WriteImage(int ** realPart, int N, int Q, char * file) {
       }
   }
 
+  cout << min << ", " << max << endl;
+
   if(min < 0 || max > Q) {
-    NormalizeImage(outputImage, N, min, max);
+    cout << "Normalized" << endl;
+    //NormalizeImage(outputImage, N, min, max);
   }
 
   writeImage(file, outputImage);
