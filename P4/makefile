@@ -29,3 +29,9 @@ Restoration:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o FF
 		Restoration.cpp
 	g++ -o Restoration $(CFLAGS) FFT2D.o image.o ReadImage.o ReadImageHeader.o fft.o \
 					WriteImage.o Restoration.cpp
+					
+Homomorphic:    image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o FFT2D.o\
+		Homomorphic.cpp
+	g++ -o Homomorphic $(CFLAGS) FFT2D.o image.o ReadImage.o ReadImageHeader.o fft.o \
+					WriteImage.o Homomorphic.cpp
+					
