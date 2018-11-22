@@ -19,6 +19,11 @@ FFT2D.o:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o \
 		FFT2D.cpp
 	g++ -c $(CFLAGS) image.o ReadImage.o ReadImageHeader.o fft.o \
 					WriteImage.o FFT2D.cpp
+					
+FFT2Dfloat.o:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o \
+		FFT2Dfloat.cpp
+	g++ -c $(CFLAGS) image.o ReadImage.o ReadImageHeader.o fft.o \
+					WriteImage.o FFT2Dfloat.cpp
 
 RemoveNoise:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o FFT2D.o\
 		RemoveNoise.cpp
@@ -30,8 +35,8 @@ Restoration:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o FF
 	g++ -o Restoration $(CFLAGS) FFT2D.o image.o ReadImage.o ReadImageHeader.o fft.o \
 					WriteImage.o Restoration.cpp
 					
-Homomorphic:    image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o FFT2D.o\
+Homomorphic:    image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o FFT2Dfloat.o\
 		Homomorphic.cpp
-	g++ -o Homomorphic $(CFLAGS) FFT2D.o image.o ReadImage.o ReadImageHeader.o fft.o \
+	g++ -o Homomorphic $(CFLAGS) FFT2Dfloat.o image.o ReadImage.o ReadImageHeader.o fft.o \
 					WriteImage.o Homomorphic.cpp
 					
