@@ -50,11 +50,13 @@ int main(int argc, char * argv[]) {
         //Apply natural logarithm to all real values in the image & create the matrices
     float ** realPart = new float*[N];
     float ** imaginaryPart = new float*[N];
+    float ** magnitudeValues = new float*[N];
 
         //Allocate memory for double pointers (2D Arrays)
     for(int i = 0 ; i < N ; i++){
             realPart[i] = new float[N];
             imaginaryPart[i] = new float[N];
+            magnitudeValues[i] = new float[N];
     }
     
     
@@ -64,6 +66,7 @@ int main(int argc, char * argv[]) {
             inputImage.getPixelVal(i, j, val);
             realPart[i][j] = val;
             imaginaryPart[i][j] = 0;
+            magnitudeValues[i][j] = 0; 
         }
     }
     
@@ -124,16 +127,16 @@ int main(int argc, char * argv[]) {
     for(int i = 0; i < N; i++){
         for(int j = 0; j < N; j++){
         
-            //float u = i - N/2;
-            //float v = j - N/2;
+            float u = i - N/2;
+            float v = j - N/2;
             
-            float u = i;
-            float v = j;
+            //float u = i;
+            //float v = j;
             
             float bigTerm = 1 - exp(-c * ( (pow(u,2) + pow(v,2)) / pow(dSubZero,2)));
         
             realPart[i][j] = (gammaResult * bigTerm) + gammaL;
-            //imaginaryPart[i][j] = (gammaResult * bigTerm) + gammaL;
+            imaginaryPart[i][j] = (gammaResult * bigTerm) + gammaL;
         }
     }
     cout << "realPart at 0,0 (filter): " << realPart[0][0] << endl; 
@@ -165,7 +168,7 @@ int main(int argc, char * argv[]) {
         //Step 6: apply magnitude sqrt(pow(realPart[i][j],2) + pow(imaginaryPart[i][j],2));
     for(int i = 0; i < N; i++){
         for(int j = 0; j < M; j++){
-            realPart[i][j] = sqrt(pow(realPart[i][j],2) + pow(imaginaryPart[i][j],2));
+            magnitudeValues[i][j] = sqrt(pow(realPart[i][j],2) + pow(imaginaryPart[i][j],2));
         }
     }
     cout << "realPart at 0,0 (magnitude): " << realPart[0][0] << endl; 
@@ -174,10 +177,19 @@ int main(int argc, char * argv[]) {
     
     
     
-        //Write image
+        //Write magnitude to output image
+    float stretchWeight = 1198;
     for(int i = 0; i < N; i++){
         for(int j = 0; j < M; j++){
-            outputImage.setPixelVal(i, j, realPart[i][j] * 255);
+            magnitudeValues[i][j] = stretchWeight * log(1 + magnitudeValues[i][j]);
+        }    
+    }
+    
+        
+        
+    for(int i = 0; i < N; i++){
+        for(int j = 0; j < M; j++){
+            outputImage.setPixelVal(i, j, magnitudeValues[i][j]);
         }
     }    
     writeImage(argv[2], outputImage);
