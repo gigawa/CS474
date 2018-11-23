@@ -17,8 +17,9 @@ void WriteImage(int ** realPart, int N, int Q, char * file);
 void NormalizeImage(ImageType & image, int N, int min, int max);
 float box_muller(float m, float s);
 float generateGaussianNoise(float mu, float sigma);
+void InverseFilter(int ** realPart, int ** imaginaryPart, float ** blurReal, float ** blurImaginary, int N, int Q);
 
-#define PI 3.14
+#define PI 3.14159
 
 int main(int argc, char * argv[]) {
   int M, N, Q; // N is rows, M is columns, Q is gray levels
@@ -42,16 +43,11 @@ int main(int argc, char * argv[]) {
   int ** realPart = new int*[N];
   int ** imaginaryPart = new int*[N];
 
-      //Allocate memory for double pointers (2D Arrays)
-  for(int i = 0 ; i < N ; i++)
-  {
+  //Allocate memory for double pointers (2D Arrays)
+  //Stick the real values into realPart and make all values in imaginaryPart 0
+  for(int i = 0; i < N; i++){
     realPart[i] = new int[N];
     imaginaryPart[i] = new int[N];
-  }
-
-  //Stick the real values into realPart and make all values in imaginaryPart 0
-
-  for(int i = 0; i < N; i++){
       for(int j = 0; j < M; j++){
           inputImage.getPixelVal(i, j, val);
           realPart[i][j] = val;
@@ -90,9 +86,13 @@ int main(int argc, char * argv[]) {
 
       float fraction = 1 / inside;
       float sinFunction = sin(inside);
-      float first = fraction * sinFunction;
+      complex<float> first = fraction * sinFunction;
 
       complex<float> blur = cexp(-I * inside);
+      cout << "u, v: " << u << ", " << v << endl;
+      cout << "Exp: " << blur << endl;
+      blur *= first;
+      cout << "Total: " << blur << endl;
       complex<float> F (realPart[i][j], imaginaryPart[i][j]);
       complex<float> G = F * blur;
 
@@ -120,7 +120,7 @@ int main(int argc, char * argv[]) {
   int ** noiseImaginary = new int*[N];
 
   float m = 0;
-  float s = 1;
+  float s = 10;
 
   for(int i = 0; i < N; i++) {
     noiseReal[i] = new int[N];
@@ -129,32 +129,11 @@ int main(int argc, char * argv[]) {
     for(int j = 0; j < N; j++) {
       noiseReal[i][j] = generateGaussianNoise(m, s);
       noiseImaginary[i][j] = 0;
-      //realPart[i][j] += noiseReal[i][j];
+      realPart[i][j] += noiseReal[i][j];
     }
   }
 
   WriteImage(realPart, N, Q, "AddedNoise.PGM");
-
-  Apply2DFFT(realPart, imaginaryPart, N, M, -1);
-  Apply2DFFT(noiseReal, noiseImaginary, N, M, -1);
-
-  //Inverse filter
-  for(int i = 0; i < N; i++) {
-    for(int j = 0; j < N; j++) {
-      int cutoff = 300;
-      float magnitude = sqrt(pow(i, 2) + pow(j, 2));
-      if(magnitude < cutoff) {
-        complex<float> blur (blurReal[i][j], blurImaginary[i][j]);
-        complex<float> F (realPart[i][j], imaginaryPart[i][j]);
-        complex<float> G = F / blur;
-
-        realPart[i][j] = int(real(G));
-        imaginaryPart[i][j] = int(imag(G));
-      }
-    }
-  }
-
-  Apply2DFFT(realPart, imaginaryPart, N, M, 1);
 
   //Shift
   for(int i = 0; i < N; i++) {
@@ -164,7 +143,10 @@ int main(int argc, char * argv[]) {
     }
   }
 
-  WriteImage(realPart, N, Q, "Inverse.PGM");
+  Apply2DFFT(realPart, imaginaryPart, N, M, -1);
+  Apply2DFFT(noiseReal, noiseImaginary, N, M, -1);
+
+  InverseFilter(realPart, imaginaryPart, blurReal, blurImaginary, N, Q);
 
   return 0;
 }
@@ -189,6 +171,42 @@ void DivideComplex(float real1, float imaginary1, float real2, float imaginary2,
   real = real1 / real2;
   imaginary = imaginary1 / real2;
 }*/
+
+void InverseFilter(int ** realPart, int ** imaginaryPart, float ** blurReal, float ** blurImaginary, int N, int Q) {
+  int ** resultReal = new int*[N];
+  int ** resultImaginary = new int*[N];
+
+  for(int i = 0; i < N; i++) {
+
+    resultReal[i] = new int[N];
+    resultImaginary[i] = new int[N];
+
+    for(int j = 0; j < N; j++) {
+      int cutoff = 300;
+      float magnitude = sqrt(pow(i, 2) + pow(j, 2));
+      if(magnitude < cutoff) {
+        complex<float> blur (blurReal[i][j], blurImaginary[i][j]);
+        complex<float> F (realPart[i][j], imaginaryPart[i][j]);
+        complex<float> G = F / blur;
+
+        realPart[i][j] = int(real(G));
+        imaginaryPart[i][j] = int(imag(G));
+      }
+    }
+  }
+
+  Apply2DFFT(realPart, imaginaryPart, N, N, 1);
+
+  //Shift
+  for(int i = 0; i < N; i++) {
+    for(int j = 0; j < N; j++) {
+      realPart[i][j] *= pow(-1, i+j);
+      imaginaryPart[i][j] *= pow(-1, i+j);
+    }
+  }
+
+  WriteImage(realPart, N, Q, "Inverse.PGM");
+}
 
 void WriteImage(int ** realPart, int N, int Q, char * file) {
   ImageType outputImage(N, N, Q);
