@@ -13,11 +13,12 @@ int readImageHeader(char[], int&, int&, int&, bool&);
 int readImage(char[], ImageType&);
 int writeImage(char[], ImageType&);
 void Apply2DFFT(int ** realPart, int ** imaginaryPart, int N, int M, int isign);
-void WriteImage(int ** realPart, int N, int Q, char * file);
+void Apply2DFFTfloat(float ** realPart, float ** imaginaryPart, int N, int M, int isign);
+void WriteImage(float ** realPart, int N, int Q, char * file);
 void NormalizeImage(ImageType & image, int N, int min, int max);
 float box_muller(float m, float s);
 float generateGaussianNoise(float mu, float sigma);
-void InverseFilter(int ** realPart, int ** imaginaryPart, float ** blurReal, float ** blurImaginary, int N, int Q);
+void InverseFilter(float ** realPart, float ** imaginaryPart, float ** blurReal, float ** blurImaginary, int N, int Q);
 
 #define PI 3.14159
 
@@ -31,7 +32,7 @@ int main(int argc, char * argv[]) {
   cout << " Header values ... N: " << N << " M: " << M << " Q: " << Q << endl;
 
 
-      // Now create a 2D matrix, store all the pixel values from the image into this matrix to use in Apply2DFFT
+      // Now create a 2D matrix, store all the pixel values from the image into this matrix to use in Apply2DFFTfloat
   ImageType inputImage(N, M, Q);
   ImageType outputImage(N, M, Q);
 
@@ -40,14 +41,14 @@ int main(int argc, char * argv[]) {
 
 
       //Creating the 2D array that will hold the results in between FFT steps as well as the final results
-  int ** realPart = new int*[N];
-  int ** imaginaryPart = new int*[N];
+  float ** realPart = new float*[N];
+  float ** imaginaryPart = new float*[N];
 
   //Allocate memory for double pointers (2D Arrays)
   //Stick the real values into realPart and make all values in imaginaryPart 0
   for(int i = 0; i < N; i++){
-    realPart[i] = new int[N];
-    imaginaryPart[i] = new int[N];
+    realPart[i] = new float[N];
+    imaginaryPart[i] = new float[N];
       for(int j = 0; j < M; j++){
           inputImage.getPixelVal(i, j, val);
           realPart[i][j] = val;
@@ -67,8 +68,8 @@ int main(int argc, char * argv[]) {
   float ** blurImaginary = new float*[N];
   int ** blurMag = new int*[N];
 
-      //Now call Apply2DFFT, do the calculations there, then output them in main afterwards
-  Apply2DFFT(realPart, imaginaryPart, N, M, -1);
+      //Now call Apply2DFFTfloat, do the calculations there, then output them in main afterwards
+  Apply2DFFTfloat(realPart, imaginaryPart, N, M, -1);
 
   //Create and Apply blur function
   for(int i = 0; i < N; i++){
@@ -79,31 +80,36 @@ int main(int argc, char * argv[]) {
 
     for(int j = 0; j < N; j++){
 
+      //translate to center
       float u = i - N/2;
       float v = j - N/2;
+
       float a = 0.1;
+
       float inside = PI * ((a * u) + (a * v));
+      float fraction;
 
-      float fraction = 1 / inside;
+      //if inside is 0 - fraction is NaN, set fraction to 0
+      if(inside == 0) {
+        fraction = 0;
+      }else {
+         fraction = 1 / inside;
+      }
+
       float sinFunction = sin(inside);
-      complex<float> first = fraction * sinFunction;
-
-      complex<float> blur = cexp(-I * inside);
-      cout << "u, v: " << u << ", " << v << endl;
-      cout << "Exp: " << blur << endl;
-      blur *= first;
-      cout << "Total: " << blur << endl;
+      complex<float> blur = fraction * sinFunction * cexp(-I * inside);
       complex<float> F (realPart[i][j], imaginaryPart[i][j]);
       complex<float> G = F * blur;
 
-      realPart[i][j] = int(real(G));
-      imaginaryPart[i][j] = int(imag(G));
+      realPart[i][j] = real(G);
+      imaginaryPart[i][j] = imag(G);
+
       blurReal[i][j] = real(blur);
       blurImaginary[i][j] = imag(blur);
     }
   }
 
-  Apply2DFFT(realPart, imaginaryPart, N, M, 1);
+  Apply2DFFTfloat(realPart, imaginaryPart, N, M, 1);
 
   //Shift
   for(int i = 0; i < N; i++) {
@@ -143,7 +149,7 @@ int main(int argc, char * argv[]) {
     }
   }
 
-  Apply2DFFT(realPart, imaginaryPart, N, M, -1);
+  Apply2DFFTfloat(realPart, imaginaryPart, N, M, -1);
   Apply2DFFT(noiseReal, noiseImaginary, N, M, -1);
 
   InverseFilter(realPart, imaginaryPart, blurReal, blurImaginary, N, Q);
@@ -172,14 +178,14 @@ void DivideComplex(float real1, float imaginary1, float real2, float imaginary2,
   imaginary = imaginary1 / real2;
 }*/
 
-void InverseFilter(int ** realPart, int ** imaginaryPart, float ** blurReal, float ** blurImaginary, int N, int Q) {
-  int ** resultReal = new int*[N];
-  int ** resultImaginary = new int*[N];
+void InverseFilter(float ** realPart, float ** imaginaryPart, float ** blurReal, float ** blurImaginary, int N, int Q) {
+  float ** resultReal = new float*[N];
+  float ** resultImaginary = new float*[N];
 
   for(int i = 0; i < N; i++) {
 
-    resultReal[i] = new int[N];
-    resultImaginary[i] = new int[N];
+    resultReal[i] = new float[N];
+    resultImaginary[i] = new float[N];
 
     for(int j = 0; j < N; j++) {
       int cutoff = 300;
@@ -189,13 +195,13 @@ void InverseFilter(int ** realPart, int ** imaginaryPart, float ** blurReal, flo
         complex<float> F (realPart[i][j], imaginaryPart[i][j]);
         complex<float> G = F / blur;
 
-        realPart[i][j] = int(real(G));
-        imaginaryPart[i][j] = int(imag(G));
+        realPart[i][j] = real(G);
+        imaginaryPart[i][j] = imag(G);
       }
     }
   }
 
-  Apply2DFFT(realPart, imaginaryPart, N, N, 1);
+  Apply2DFFTfloat(realPart, imaginaryPart, N, N, 1);
 
   //Shift
   for(int i = 0; i < N; i++) {
@@ -208,7 +214,7 @@ void InverseFilter(int ** realPart, int ** imaginaryPart, float ** blurReal, flo
   WriteImage(realPart, N, Q, "Inverse.PGM");
 }
 
-void WriteImage(int ** realPart, int N, int Q, char * file) {
+void WriteImage(float ** realPart, int N, int Q, char * file) {
   ImageType outputImage(N, N, Q);
   int max = 0;
   int min = 10000;

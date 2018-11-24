@@ -35,9 +35,9 @@ RemoveNoise:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o FF
 	g++ -o RemoveNoise $(CFLAGS) FFT2D.o image.o ReadImage.o ReadImageHeader.o fft.o \
 					WriteImage.o RemoveNoise.cpp
 
-Restoration:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o noise.o FFT2D.o\
+Restoration:	image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o noise.o FFT2D.o FFT2Dfloat.o\
 		Restoration.cpp
-	g++ -o Restoration $(CFLAGS) FFT2D.o image.o ReadImage.o ReadImageHeader.o fft.o noise.o \
+	g++ -o Restoration $(CFLAGS) FFT2D.o FFT2Dfloat.o image.o ReadImage.o ReadImageHeader.o fft.o noise.o \
 					WriteImage.o Restoration.cpp
 
 Homomorphic:    image.h image.o ReadImage.o ReadImageHeader.o WriteImage.o fft.o FFT2Dfloat.o\
