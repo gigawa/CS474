@@ -18,14 +18,20 @@ void WriteImage(float ** realPart, int N, int Q, char * file);
 void NormalizeImage(ImageType & image, int N, int min, int max);
 float box_muller(float m, float s);
 float generateGaussianNoise(float mu, float sigma);
-void InverseFilter(float ** realPart, float ** imaginaryPart, float ** blurReal, float ** blurImaginary, int N, int Q);
+void InverseFilter(float ** realPart, float ** imaginaryPart, float ** blurReal, float ** blurImaginary, int ** noiseReal, int ** noiseImaginary, int N, int Q);
+void WienerFilter(float ** realPart, float ** imaginaryPart, float ** blurReal, float ** blurImaginary, int N, int Q);
 
 #define PI 3.14159
+int cutoff;
+float k;
 
 int main(int argc, char * argv[]) {
   int M, N, Q; // N is rows, M is columns, Q is gray levels
   bool type;
   int val;
+
+  cout << "Enter Cutoff: ";
+  cin >> cutoff;
 
   readImageHeader(argv[1], N, M, Q, type); //read in the input image, store rows to N, cols to M, gray lvl to Q
 
@@ -87,19 +93,24 @@ int main(int argc, char * argv[]) {
       float a = 0.1;
 
       float inside = PI * ((a * u) + (a * v));
-      float fraction;
-
-      //if inside is 0 - fraction is NaN, set fraction to 0
-      if(inside == 0) {
-        fraction = 0;
-      }else {
-         fraction = 1 / inside;
-      }
+      float fraction = 1 / inside;
 
       float sinFunction = sin(inside);
       complex<float> blur = fraction * sinFunction * cexp(-I * inside);
+
+      //if inside is 0 - fraction is NaN, set blur to 1 so F doesn't change
+      if(inside == 0) {
+        blur = (1,1);
+      }
+
       complex<float> F (realPart[i][j], imaginaryPart[i][j]);
       complex<float> G = F * blur;
+
+      //cout << "F: " << F << endl;
+      //cout << "G: " << G << endl;
+
+      //G /= blur;
+      //cout << "FA: " << G << endl;
 
       realPart[i][j] = real(G);
       imaginaryPart[i][j] = imag(G);
@@ -126,7 +137,7 @@ int main(int argc, char * argv[]) {
   int ** noiseImaginary = new int*[N];
 
   float m = 0;
-  float s = 10;
+  float s = 1000;
 
   for(int i = 0; i < N; i++) {
     noiseReal[i] = new int[N];
@@ -136,6 +147,9 @@ int main(int argc, char * argv[]) {
       noiseReal[i][j] = generateGaussianNoise(m, s);
       noiseImaginary[i][j] = 0;
       realPart[i][j] += noiseReal[i][j];
+      if(realPart[i][j] > 255) {
+        realPart[i][j] = 255;
+      }
     }
   }
 
@@ -146,39 +160,28 @@ int main(int argc, char * argv[]) {
     for(int j = 0; j < N; j++) {
       realPart[i][j] *= pow(-1, i+j);
       imaginaryPart[i][j] *= pow(-1, i+j);
+      noiseReal[i][j] *= pow(-1, i+j);
+      noiseImaginary[i][j] *= pow(-1, i+j);
     }
   }
 
   Apply2DFFTfloat(realPart, imaginaryPart, N, M, -1);
   Apply2DFFT(noiseReal, noiseImaginary, N, M, -1);
 
-  InverseFilter(realPart, imaginaryPart, blurReal, blurImaginary, N, Q);
+  InverseFilter(realPart, imaginaryPart, blurReal, blurImaginary, noiseReal, noiseImaginary, N, Q);
+
+  cout << "Enter k: ";
+  cin >> k;
+  while(k != -1) {
+    WienerFilter(realPart, imaginaryPart, blurReal, blurImaginary, N, Q);
+    cout << "Enter k: ";
+    cin >> k;
+  }
 
   return 0;
 }
 
-/*void MultiplyComplex(float real1, float imaginary1, float real2, float imaginary2, float & real, float & imaginary) {
-  float tempReal = (real1 * real2) - (imaginary1 * imaginary2);
-  float tempImaginary = (imaginary1 * real2) + (real1 * imaginary2);
-  real = tempReal;
-  imaginary = tempImaginary;
-}
-
-void DivideComplex(float real1, float imaginary1, float real2, float imaginary2, float & real, float & imaginary) {
-  float realConj = real2;
-  float imaginaryConj = -1 * imaginary2;
-  MultiplyComplex(real1, imaginary1, realConj, imaginaryConj, real1, imaginary1);
-  MultiplyComplex(real2, imaginary2, realConj, imaginaryConj, real2, imaginary2);
-
-  if(imaginary2 != 0) {
-    cout << "Imaginary: " << imaginary2 << endl;
-  }
-
-  real = real1 / real2;
-  imaginary = imaginary1 / real2;
-}*/
-
-void InverseFilter(float ** realPart, float ** imaginaryPart, float ** blurReal, float ** blurImaginary, int N, int Q) {
+void InverseFilter(float ** realPart, float ** imaginaryPart, float ** blurReal, float ** blurImaginary, int ** noiseReal, int ** noiseImaginary, int N, int Q) {
   float ** resultReal = new float*[N];
   float ** resultImaginary = new float*[N];
 
@@ -188,30 +191,77 @@ void InverseFilter(float ** realPart, float ** imaginaryPart, float ** blurReal,
     resultImaginary[i] = new float[N];
 
     for(int j = 0; j < N; j++) {
-      int cutoff = 300;
+
       float magnitude = sqrt(pow(i, 2) + pow(j, 2));
+
       if(magnitude < cutoff) {
         complex<float> blur (blurReal[i][j], blurImaginary[i][j]);
-        complex<float> F (realPart[i][j], imaginaryPart[i][j]);
-        complex<float> G = F / blur;
+        complex<float> G (realPart[i][j], imaginaryPart[i][j]);
+        complex<float> N (noiseReal[i][j], noiseImaginary[i][j]);
+        complex<float> F = G / blur;
 
-        realPart[i][j] = real(G);
-        imaginaryPart[i][j] = imag(G);
+        resultReal[i][j] = real(F);
+        resultImaginary[i][j] = imag(F);
+
+        if(isnan(realPart[i][j]) || isnan(imaginaryPart[i][j])) {
+          cout << "i, j" << i << ", " << j << endl;
+          cout << "G: " << G << endl;
+        }
       }
     }
   }
 
-  Apply2DFFTfloat(realPart, imaginaryPart, N, N, 1);
+  Apply2DFFTfloat(resultReal, resultImaginary, N, N, 1);
 
   //Shift
   for(int i = 0; i < N; i++) {
     for(int j = 0; j < N; j++) {
-      realPart[i][j] *= pow(-1, i+j);
-      imaginaryPart[i][j] *= pow(-1, i+j);
+      resultReal[i][j] *= pow(-1, i+j);
+      resultImaginary[i][j] *= pow(-1, i+j);
     }
   }
 
-  WriteImage(realPart, N, Q, "Inverse.PGM");
+  WriteImage(resultReal, N, Q, "Inverse.PGM");
+}
+
+void WienerFilter(float ** realPart, float ** imaginaryPart, float ** blurReal, float ** blurImaginary, int N, int Q) {
+  float ** resultReal = new float*[N];
+  float ** resultImaginary = new float*[N];
+
+  for(int i = 0; i < N; i++) {
+
+    resultReal[i] = new float[N];
+    resultImaginary[i] = new float[N];
+
+    for(int j = 0; j < N; j++) {
+      complex<float> blur (blurReal[i][j], blurImaginary[i][j]);
+      float blurMag = sqrt(pow(blurReal[i][j], 2) + pow(blurImaginary[i][j], 2));
+
+      complex<float> G (realPart[i][j], imaginaryPart[i][j]);
+      complex<float> F1 = (pow(blurMag, 2) / (pow(blurMag, 2) + k));
+      complex<float> F =  F1 * (G / blur);
+
+      resultReal[i][j] = real(F);
+      resultImaginary[i][j] = imag(F);
+
+      if(isnan(realPart[i][j]) || isnan(imaginaryPart[i][j])) {
+        cout << "i, j" << i << ", " << j << endl;
+        cout << "G: " << G << endl;
+      }
+    }
+  }
+
+  Apply2DFFTfloat(resultReal, resultImaginary, N, N, 1);
+
+  //Shift
+  for(int i = 0; i < N; i++) {
+    for(int j = 0; j < N; j++) {
+      resultReal[i][j] *= pow(-1, i+j);
+      resultImaginary[i][j] *= pow(-1, i+j);
+    }
+  }
+
+  WriteImage(resultReal, N, Q, "Wiener.PGM");
 }
 
 void WriteImage(float ** realPart, int N, int Q, char * file) {
