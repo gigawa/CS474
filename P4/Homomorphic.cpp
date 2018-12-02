@@ -113,6 +113,13 @@ int main(int argc, char * argv[]) {
     float gammaL = 0.5;
     float c = 1.0;
     
+    cout << "Enter gammaH (base is 1.5): " << endl;
+    cin >> gammaH;
+    
+    cout << "Enter gammaL (base is 0.5): " << endl;
+    cin >> gammaL;
+    
+    
     float gammaResult = gammaH - gammaL;
     
         //Shift
@@ -152,7 +159,6 @@ int main(int argc, char * argv[]) {
     cout << "Step 4 done. " << endl;
     
     
-    
         //Step 5: apply exp
     for(int i = 0; i < N; i++){
         for(int j = 0; j < M; j++){
@@ -162,7 +168,6 @@ int main(int argc, char * argv[]) {
     cout << "realPart at 0,0 (exp): " << realPart[0][0] << endl; 
     cout << "imaginaryPart at 0,0 (exp): " << imaginaryPart[0][0] << endl; 
     cout << "Step 5 done. " << endl;
-    
     
     
         //Step 6: apply magnitude sqrt(pow(realPart[i][j],2) + pow(imaginaryPart[i][j],2));
@@ -178,7 +183,9 @@ int main(int argc, char * argv[]) {
     
     
         //Write magnitude to output image
-    float stretchWeight = 1198;
+    float stretchWeight = 0;
+    cout << "Input stretchWeight value: " << endl;
+    cin >> stretchWeight;
     for(int i = 0; i < N; i++){
         for(int j = 0; j < M; j++){
             magnitudeValues[i][j] = stretchWeight * log(1 + magnitudeValues[i][j]);
