@@ -29,9 +29,10 @@ int main(int argc, char * argv[]) {
   int M, N, Q; // N is rows, M is columns, Q is gray levels
   bool type;
   int val;
+  float s;
 
-  cout << "Enter Cutoff: ";
-  cin >> cutoff;
+  cout << "Enter s: ";
+  cin >> s;
 
   readImageHeader(argv[1], N, M, Q, type); //read in the input image, store rows to N, cols to M, gray lvl to Q
 
@@ -87,8 +88,8 @@ int main(int argc, char * argv[]) {
     for(int j = 0; j < N; j++){
 
       //translate to center
-      float u = i - N/2;
-      float v = j - N/2;
+      float u = N/2 - i;
+      float v = N/2 - j;
 
       float a = 0.1;
 
@@ -105,12 +106,6 @@ int main(int argc, char * argv[]) {
 
       complex<float> F (realPart[i][j], imaginaryPart[i][j]);
       complex<float> G = F * blur;
-
-      //cout << "F: " << F << endl;
-      //cout << "G: " << G << endl;
-
-      //G /= blur;
-      //cout << "FA: " << G << endl;
 
       realPart[i][j] = real(G);
       imaginaryPart[i][j] = imag(G);
@@ -137,7 +132,6 @@ int main(int argc, char * argv[]) {
   int ** noiseImaginary = new int*[N];
 
   float m = 0;
-  float s = 1000;
 
   for(int i = 0; i < N; i++) {
     noiseReal[i] = new int[N];
@@ -160,15 +154,18 @@ int main(int argc, char * argv[]) {
     for(int j = 0; j < N; j++) {
       realPart[i][j] *= pow(-1, i+j);
       imaginaryPart[i][j] *= pow(-1, i+j);
-      noiseReal[i][j] *= pow(-1, i+j);
-      noiseImaginary[i][j] *= pow(-1, i+j);
     }
   }
 
   Apply2DFFTfloat(realPart, imaginaryPart, N, M, -1);
-  Apply2DFFT(noiseReal, noiseImaginary, N, M, -1);
 
-  InverseFilter(realPart, imaginaryPart, blurReal, blurImaginary, noiseReal, noiseImaginary, N, Q);
+  cout << "Enter Cutoff: ";
+  cin >> cutoff;
+  while(cutoff != -1) {
+    InverseFilter(realPart, imaginaryPart, blurReal, blurImaginary, noiseReal, noiseImaginary, N, Q);
+    cout << "Enter Cutoff: ";
+    cin >> cutoff;
+  }
 
   cout << "Enter k: ";
   cin >> k;
@@ -192,7 +189,9 @@ void InverseFilter(float ** realPart, float ** imaginaryPart, float ** blurReal,
 
     for(int j = 0; j < N; j++) {
 
-      float magnitude = sqrt(pow(i, 2) + pow(j, 2));
+      int u = i - N/2;
+      int v = j - N/2;
+      float magnitude = sqrt(pow(u, 2) + pow(v, 2));
 
       if(magnitude < cutoff) {
         complex<float> blur (blurReal[i][j], blurImaginary[i][j]);
@@ -202,11 +201,6 @@ void InverseFilter(float ** realPart, float ** imaginaryPart, float ** blurReal,
 
         resultReal[i][j] = real(F);
         resultImaginary[i][j] = imag(F);
-
-        if(isnan(realPart[i][j]) || isnan(imaginaryPart[i][j])) {
-          cout << "i, j" << i << ", " << j << endl;
-          cout << "G: " << G << endl;
-        }
       }
     }
   }
@@ -243,11 +237,6 @@ void WienerFilter(float ** realPart, float ** imaginaryPart, float ** blurReal, 
 
       resultReal[i][j] = real(F);
       resultImaginary[i][j] = imag(F);
-
-      if(isnan(realPart[i][j]) || isnan(imaginaryPart[i][j])) {
-        cout << "i, j" << i << ", " << j << endl;
-        cout << "G: " << G << endl;
-      }
     }
   }
 

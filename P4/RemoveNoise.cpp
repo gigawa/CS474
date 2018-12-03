@@ -23,11 +23,10 @@ int main(int argc, char * argv[]) {
   bool type;
   int val;
   int isign = -1;
-  int filterSize = 40;
-  int butterworth = 4;
+  int threshold;
 
-  cout << "Enter band radius: ";
-  cin >> filterSize;
+  cout << "Enter threshold: ";
+  cin >> threshold;
 
   readImageHeader(argv[1], N, M, Q, type); //read in the input image, store rows to N, cols to M, gray lvl to Q
 
@@ -72,49 +71,20 @@ int main(int argc, char * argv[]) {
 
       //Now call Apply2DFFT, do the calculations there, then output them in main afterwards
   Apply2DFFT(realPart, imaginaryPart, N, M, isign);
+  //Check surrounding pixels for outliers representing noise
+  //threshold difference of surrounding to check if significant
+  for(int i = 1; i < N-2; i++) {
+    for(int j = 1; j < N-2; j++) {
 
-  float ** filterRealPart = new float*[N];
-  int ** filterImaginaryPart = new int*[N];
+      int surrounding[8] = {realPart[i-1][j-1], realPart[i-1][j], realPart[i][j-1], realPart[i-1][j+1], realPart[i+1][j-1], realPart[i+1][j+1], realPart[i][j+1], realPart[i+1][j]};
+      int surroundingImaginary[8] = {imaginaryPart[i-1][j-1], imaginaryPart[i-1][j], imaginaryPart[i][j-1], imaginaryPart[i-1][j+1], imaginaryPart[i+1][j-1], imaginaryPart[i+1][j+1], imaginaryPart[i][j+1], imaginaryPart[i+1][j]};
+      int difference[8] = {realPart[i][j] - surrounding[0], realPart[i][j] - surrounding[1], realPart[i][j] - surrounding[2], realPart[i][j] - surrounding[3], realPart[i][j] - surrounding[4], realPart[i][j] - surrounding[5], realPart[i][j] - surrounding[6], realPart[i][j] - surrounding[7]};
 
-      //Allocate memory for double pointers (2D Arrays)
-  for(int i = 0 ; i < N ; i++)
-{
-  filterRealPart[i] = new float[N];
-}
-
-for(int i = 0; i < N; i++){
-    for(int j = 0; j < M; j++){
-      int mag = sqrt(i*i + j*j);
-      filterRealPart[i][j] = 0;
+      if(difference[0] > threshold && difference[1] > threshold && difference[2] > threshold && difference[3] > threshold && difference[4] > threshold && difference[5] > threshold && difference[6] > threshold && difference[7] > threshold) {
+        realPart[i][j] = 0;
+        imaginaryPart[i][j] = 0;
+      }
     }
-}
-
-  //Create low pass filter
-  for(int i = 0; i < N; i++){
-      for(int j = 0; j < M; j++){
-        //ideal
-        /*int mag = sqrt(pow(i - N/2, 2) + pow(j - N/2, 2));
-          if(mag < filterSize) {
-            cout  << i << ", " << j << endl;
-            filterRealPart[i][j] = 1;
-          }*/
-
-          //gaussian
-          /*filterRealPart[i][j] = exp(-1 * (pow(i-N/2, 2) + pow(j-N/2, 2)) / (2 * pow(2 * filterSize, 2)));
-          cout << "Filter: " << filterRealPart[i][j] << endl;
-          */
-
-          //Butterworth
-          filterRealPart[i][j] = 1 / (1 + pow(sqrt(pow(i - N/2, 2) + pow(j - N/2, 2)) / filterSize, 2 * butterworth));
-      }
-  }
-
-  //Apply Filter
-  for(int i = 0; i < N; i++){
-      for(int j = 0; j < M; j++){
-          realPart[i][j] *= filterRealPart[i][j];
-          imaginaryPart[i][j] *= filterRealPart[i][j];
-      }
   }
 
   Apply2DFFT(realPart, imaginaryPart, N, M, 1);
