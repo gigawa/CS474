@@ -1,4 +1,6 @@
-# Image Quantization
+#Basic Processing
+Image Quantization
+
 Image Sampling
 
 Histogram Equalization
