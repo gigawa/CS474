@@ -1,4 +1,4 @@
-#Image Quantization
+# Image Quantization
 Image Sampling
 
 Histogram Equalization
