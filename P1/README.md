@@ -1,4 +1,4 @@
-#Basic Processing
+# Basic Image Processing
 Image Quantization
 
 Image Sampling
